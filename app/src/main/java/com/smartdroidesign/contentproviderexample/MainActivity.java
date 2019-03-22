@@ -25,11 +25,12 @@ import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
     private ListView contactNames;
     private static final int REQUEST_CODE_READ_CONTACTS = 1;
     private static boolean READ_CONTACTS_GRANTED = false;
+    FloatingActionButton fab = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate: checkSelfPermission = " + hasReadContactPermission);
 
         // Check permission
-        if(hasReadContactPermission == PackageManager.PERMISSION_DENIED) {
+        if(hasReadContactPermission == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "onCreate: permission granted");
             READ_CONTACTS_GRANTED = true;
         } else {
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{READ_CONTACTS}, REQUEST_CODE_READ_CONTACTS);
         }
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        fab = findViewById(R.id.fab);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,21 +86,28 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         Log.d(TAG, "onRequestPermissionsResult: starts");
-        switch (requestCode) {
+        switch(requestCode) {
             case REQUEST_CODE_READ_CONTACTS: {
-                // If request is cancelled, the rest array is empty.
-                if (grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                    // Permission was granted
-                    // Do the contacts related task you need to do
+                // If request is cancelled, the rest arrays are empty.
+                if(grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
                     Log.d(TAG, "onRequestPermissionsResult: permission granted");
                     READ_CONTACTS_GRANTED = true;
                 } else {
-                    // permission denied!
-                    // functionality that depends on this permission
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    // Migatte no gokui
+                    Snackbar snackbar = Snackbar.make(findViewById(R.id.fab),
+                            "Permission refused", Snackbar.LENGTH_SHORT);
+                    snackbar.setAction("Permission refused", new MainActivity());
+                    snackbar.show();
                     Log.d(TAG, "onRequestPermissionsResult: permission refused");
                 }
+                fab.setEnabled(READ_CONTACTS_GRANTED);
             }
         }
+
         Log.d(TAG, "onRequestPermissionsResult: ends");
     }
 
@@ -123,5 +131,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View v) {
+
     }
 }
