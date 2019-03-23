@@ -1,6 +1,5 @@
 package com.smartdroidesign.contentproviderexample;
 
-import android.Manifest;
 import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -45,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "onCreate: checkSelfPermission = " + hasReadContactPermission);
 
         // Check permission
-        if(hasReadContactPermission == PackageManager.PERMISSION_GRANTED) {
+        if (hasReadContactPermission == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "onCreate: permission granted");
             READ_CONTACTS_GRANTED = true;
         } else {
@@ -54,28 +53,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         fab = findViewById(R.id.fab);
-
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "fab onClick: starts");
-                String[] projection = {ContactsContract.Contacts.DISPLAY_NAME_PRIMARY};
-                // Content Resolver is queried for data, and it returns a cursor.
-                ContentResolver contentResolver = getContentResolver();
-                Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, // Source of data.
-                        projection, // String[] array to store the name of the columns retrieved.
-                        null, // String that contains a filter to determine which rows are returned. (It's a WHERE clause, and null = get me all rows(
-                        null, // Array of values used to replace the placeholders in the selection string
-                        ContactsContract.Contacts.DISPLAY_NAME_PRIMARY); // This is like the ORDER BY clause
+                if (READ_CONTACTS_GRANTED) {
+                    String[] projection = {ContactsContract.Contacts.DISPLAY_NAME_PRIMARY};
+                    // Content Resolver is queried for data, and it returns a cursor.
+                    ContentResolver contentResolver = getContentResolver();
+                    Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, // Source of data.
+                            projection, // String[] array to store the name of the columns retrieved.
+                            null, // String that contains a filter to determine which rows are returned. (It's a WHERE clause, and null = get me all rows(
+                            null, // Array of values used to replace the placeholders in the selection string
+                            ContactsContract.Contacts.DISPLAY_NAME_PRIMARY); // This is like the ORDER BY clause
 
-                if (cursor != null) {
-                    List<String> contacts = new ArrayList<>();
-                    while (cursor.moveToNext()) {
-                        contacts.add(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)));
+                    if (cursor != null) {
+                        List<String> contacts = new ArrayList<>();
+                        while (cursor.moveToNext()) {
+                            contacts.add(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)));
+                        }
+                        cursor.close();
+                        ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, R.layout.contact_detail, R.id.name, contacts);
+                        contactNames.setAdapter(adapter);
                     }
-                    cursor.close();
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, R.layout.contact_detail, R.id.name, contacts);
-                    contactNames.setAdapter(adapter);
+                } else {
+                    // Migatte no gokui
+                    Snackbar.make(findViewById(R.id.fab),
+                            "Permission refused", Snackbar.LENGTH_SHORT).setAction("Permission refused", new MainActivity()).show();
                 }
                 Log.d(TAG, "fab onClick: ends");
             }
@@ -86,10 +90,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         Log.d(TAG, "onRequestPermissionsResult: starts");
-        switch(requestCode) {
+        switch (requestCode) {
             case REQUEST_CODE_READ_CONTACTS: {
                 // If request is cancelled, the rest arrays are empty.
-                if(grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
                     Log.d(TAG, "onRequestPermissionsResult: permission granted");
@@ -97,14 +101,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
-                    // Migatte no gokui
-                    Snackbar snackbar = Snackbar.make(findViewById(R.id.fab),
-                            "Permission refused", Snackbar.LENGTH_SHORT);
-                    snackbar.setAction("Permission refused", new MainActivity());
-                    snackbar.show();
                     Log.d(TAG, "onRequestPermissionsResult: permission refused");
                 }
-                fab.setEnabled(READ_CONTACTS_GRANTED);
+//                fab.setEnabled(READ_CONTACTS_GRANTED);
             }
         }
 
